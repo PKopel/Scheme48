@@ -1,8 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Run (run) where
+module Run
+  ( run
+  )
+where
 
-import Import
+import           Import
 
 run :: RIO App ()
 run = do

@@ -1,14 +1,14 @@
-name:                Scheme48
-version:             0.1.0.0
-github:              PKopel/Scheme48
-license:             BSD3
-author:              Paweł Kopel
-maintainer:          pawel.kopel2@gmail.com
-copyright:           2021 Paweł Kopel
+name: Scheme48
+version: 0.0.0.1
+github: PKopel/Scheme48
+license: BSD3
+author: Paweł Kopel
+maintainer: pawel.kopel2@gmail.com
+copyright: 2021 Paweł Kopel
 
 extra-source-files:
-- README.md
-- ChangeLog.md
+  - README.md
+  - ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -17,46 +17,47 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on Github at <https://github.com/PKopel/Scheme48#readme>
+description: Please see the README on Github at <https://github.com/PKopel/Scheme48#readme>
 
 dependencies:
-- base >= 4.11 && < 10
-- rio >= 0.1.12.0
+  - base >= 4.11 && < 10
+  - rio >= 0.1.12.0
+  - attoparsec
 
 ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wpartial-fields
-- -Wredundant-constraints
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wpartial-fields
+  - -Wredundant-constraints
 
 library:
   source-dirs: src
 
 executables:
   Scheme48-exe:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     dependencies:
-    - Scheme48
-    - optparse-simple
+      - Scheme48
+      - optparse-simple
 
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
 
 tests:
   Scheme48-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
     dependencies:
-    - Scheme48
-    - hspec
+      - Scheme48
+      - hspec
 
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
