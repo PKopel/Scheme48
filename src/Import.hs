@@ -6,4 +6,4 @@ module Import
 where
 
 import           RIO
-import           Types
+import           Types                   hiding ( toRational )

@@ -1,8 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Eval where
 
 import           Import
 import           Data.List                      ( foldl1 )
+import qualified Data.Map                      as Map
 
 eval :: LispVal -> LispVal
 eval (List [Atom "quote", val]) = val
@@ -12,22 +15,27 @@ eval (Vector vec              ) = undefined
 eval val                        = val
 
 apply :: String -> [LispVal] -> LispVal
-apply func args = maybe (Bool False) ($ args) $ lookup func primitives
+apply func args = maybe (Bool False) ($ args) $ Map.lookup func primitives
 
-primitives :: [(String, [LispVal] -> LispVal)]
+primitives :: Map String ([LispVal] -> LispVal)
 primitives =
   [ ("+"        , numericBinop (+))
   , ("-"        , numericBinop (-))
   , ("*"        , numericBinop (*))
-  , ("/"        , numericBinop div)
-  , ("modulo"   , numericBinop mod)
-  , ("quotient" , numericBinop quot)
-  , ("remainder", numericBinop rem)
+  , ("/"        , numericBinop (/))
+  , ("modulo"   , intBinop mod)
+  , ("quotient" , intBinop quot)
+  , ("remainder", intBinop rem)
   ]
 
-numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
-numericBinop op params = Number . Integer . foldl1 op $ map unpackNum params
+numericBinop :: (NumType -> NumType -> NumType) -> [LispVal] -> LispVal
+numericBinop op params = Number $ foldl1 op $ map unpackNum params
+ where
+  unpackNum (Number n) = n
+  unpackNum _          = Integer 0
 
-unpackNum :: LispVal -> Integer
-unpackNum (Number (Integer n)) = n
-unpackNum _                    = 0
+intBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
+intBinop op params = Number . Integer $ foldl1 op $ map unpackInt params
+ where
+  unpackInt (Number (Integer n)) = n
+  unpackInt _                    = 0

@@ -24,6 +24,7 @@ dependencies:
   - rio >= 0.1.12.0
   - attoparsec
   - containers
+  - template-haskell
 
 ghc-options:
   - -Wall

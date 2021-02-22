@@ -114,20 +114,23 @@ parseVector =
     <&> Vector
     .   fromList
 
-parseQuotes :: Char -> LispVal -> Parser LispVal
+parseQuotes :: Text -> LispVal -> Parser LispVal
 parseQuotes c val = do
-  _ <- char c
+  _ <- string c
   x <- parseExpr
   return $ List [val, x]
 
 parseQuasiquote :: Parser LispVal
-parseQuasiquote = parseQuotes '`' (Atom "quasiquote")
+parseQuasiquote = parseQuotes "`" (Atom "quasiquote")
 
 parseQuote :: Parser LispVal
-parseQuote = parseQuotes '\'' (Atom "quote")
+parseQuote = parseQuotes "\'" (Atom "quote")
 
 parseUnquote :: Parser LispVal
-parseUnquote = parseQuotes ',' (Atom "unquote")
+parseUnquote = parseQuotes "," (Atom "unquote")
+
+parseUnquoteSplicing :: Parser LispVal
+parseUnquoteSplicing = parseQuotes ",@" (Atom "unquote-splicing")
 
 parseExpr :: Parser LispVal
 parseExpr =
