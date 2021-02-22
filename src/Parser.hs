@@ -6,11 +6,13 @@ module Parser where
 import           Import                  hiding ( try )
 import           Data.Attoparsec.Combinator
 import           Data.Attoparsec.Text
+import           Data.Sequence                  ( fromList )
 import           Data.Complex
 import           RIO.Partial                    ( read )
 
 data LispVal = Atom String
              | List [LispVal]
+             | Vector (Seq LispVal)
              | DottedList [LispVal] LispVal
              | Number NumType
              | Char Char
@@ -108,15 +110,41 @@ parseList = do
     ')' -> return $ List inits
     _ -> skipSpaces *> parseExpr <* skipSpaces <* char ')' <&> DottedList inits
 
-parseQuoted :: Parser LispVal
-parseQuoted = do
-  _ <- char '\''
+parseVector :: Parser LispVal
+parseVector =
+  "#("
+    *>  skipSpaces
+    *>  sepBy parseExpr skipSpaces
+    <*  skipSpaces
+    <*  char ')'
+    <&> Vector
+    .   fromList
+
+parseQuotes :: Char -> LispVal -> Parser LispVal
+parseQuotes c val = do
+  _ <- char c
   x <- parseExpr
-  return $ List [Atom "quote", x]
+  return $ List [val, x]
+
+parseQuasiquote :: Parser LispVal
+parseQuasiquote = parseQuotes '`' (Atom "quasiquote")
+
+parseQuote :: Parser LispVal
+parseQuote = parseQuotes '\'' (Atom "quote")
+
+parseUnquote :: Parser LispVal
+parseUnquote = parseQuotes ',' (Atom "unquote")
 
 parseExpr :: Parser LispVal
 parseExpr =
-  parseAtom <|> parseString <|> parseNumber <|> parseQuoted <|> parseList
+  parseString
+    <|> parseNumber
+    <|> parseQuote
+    <|> parseQuasiquote
+    <|> parseUnquote
+    <|> parseVector
+    <|> parseList
+    <|> parseAtom
 
 readExpr :: Text -> String
 readExpr input = case parseOnly (skipMany space >> parseExpr) input of
