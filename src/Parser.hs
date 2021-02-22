@@ -7,23 +7,10 @@ import           Import                  hiding ( try )
 import           Data.Attoparsec.Combinator
 import           Data.Attoparsec.Text
 import           Data.Sequence                  ( fromList )
-import           Data.Complex
+import           Data.Complex                   ( Complex((:+)) )
+import           Data.Ratio                     ( (%) )
 import           RIO.Partial                    ( read )
 
-data LispVal = Atom String
-             | List [LispVal]
-             | Vector (Seq LispVal)
-             | DottedList [LispVal] LispVal
-             | Number NumType
-             | Char Char
-             | String String
-             | Bool Bool
-             deriving (Show)
-
-data NumType = Complex (Complex Double)
-             | Real Double
-             | Integer Integer
-             deriving (Show)
 
 data Base = Bin | Oct | Dec | Hex
 
@@ -90,6 +77,9 @@ parseInteger = Integer <$> do
     Dec -> parseBase 10 <$> many1 digit
     Hex -> parseBase 16 <$> many1 digit
 
+parseRational :: Parser NumType
+parseRational = (%) <$> (decimal <* "/") <*> decimal <&> Rational
+
 parseReal :: Parser NumType
 parseReal = double <&> Real
 
@@ -99,7 +89,11 @@ parseComplex =
 
 parseNumber :: Parser LispVal
 parseNumber =
-  try parseInteger <|> try parseReal <|> try parseComplex <&> Number
+  try parseInteger
+    <|> try parseReal
+    <|> try parseRational
+    <|> try parseComplex
+    <&> Number
 
 parseList :: Parser LispVal
 parseList = do
@@ -146,7 +140,7 @@ parseExpr =
     <|> parseList
     <|> parseAtom
 
-readExpr :: Text -> String
+readExpr :: Text -> LispVal
 readExpr input = case parseOnly (skipMany space >> parseExpr) input of
-  Left  err -> "No match: " ++ err
-  Right v   -> "Found value " ++ show v
+  Left  err -> String $ "No match: " ++ show err
+  Right val -> val
