@@ -3,23 +3,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Parser where
 
-import           Import hiding (try)
+import           Import                  hiding ( try )
 import           Data.Attoparsec.Combinator
 import           Data.Attoparsec.Text
-import Data.Complex
+import           Data.Complex
 import           RIO.Partial                    ( read )
 
 data LispVal = Atom String
              | List [LispVal]
              | DottedList [LispVal] LispVal
-             | Number NumType 
+             | Number NumType
              | Char Char
              | String String
              | Bool Bool
              deriving (Show)
 
-data NumType = Complex (Complex Double) 
-             | Real Double  
+data NumType = Complex (Complex Double)
+             | Real Double
              | Integer Integer
              deriving (Show)
 
@@ -33,6 +33,9 @@ noneOf list = satisfy (`notElem` list)
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
+
+skipSpaces :: Parser ()
+skipSpaces = skipMany space
 
 escaped :: Parser Char
 escaped = char '\\' *> oneOf "\\\"\'nrt"
@@ -78,36 +81,44 @@ parseBase a list = parseBase' list 0
 
 parseInteger :: Parser NumType
 parseInteger = Integer <$> do
-      pref <- option Dec radixPref
-      case pref of
-        Bin -> parseBase 2 <$> many1 digit
-        Oct -> parseBase 8 <$> many1 digit
-        Dec -> parseBase 10 <$> many1 digit
-        Hex -> parseBase 16 <$> many1 digit
+  pref <- option Dec radixPref
+  case pref of
+    Bin -> parseBase 2 <$> many1 digit
+    Oct -> parseBase 8 <$> many1 digit
+    Dec -> parseBase 10 <$> many1 digit
+    Hex -> parseBase 16 <$> many1 digit
 
 parseReal :: Parser NumType
-parseReal = double <&> Real 
+parseReal = double <&> Real
 
 parseComplex :: Parser NumType
-parseComplex = (:+) <$> (double <* oneOf "+-") <*> (double <* char 'i') <&> Complex 
+parseComplex =
+  (:+) <$> (double <* oneOf "+-") <*> (double <* char 'i') <&> Complex
 
 parseNumber :: Parser LispVal
-parseNumber = try parseInteger <|> try parseReal <|> try parseComplex <&> Number
+parseNumber =
+  try parseInteger <|> try parseReal <|> try parseComplex <&> Number
 
 parseList :: Parser LispVal
-parseList = List <$> sepBy parseExpr skipSpace 
+parseList = do
+  char '(' *> skipSpaces
+  inits <- sepBy parseExpr skipSpaces
+  last  <- skipSpaces *> oneOf ".)"
+  case last of
+    ')' -> return $ List inits
+    _ -> skipSpaces *> parseExpr <* skipSpaces <* char ')' <&> DottedList inits
 
-parseDottedList :: Parser LispVal
-parseDottedList = do
-    head <- endBy parseExpr skipSpace 
-    tail <- char '.' *> skipSpace *> parseExpr
-    return $ DottedList head tail
+parseQuoted :: Parser LispVal
+parseQuoted = do
+  _ <- char '\''
+  x <- parseExpr
+  return $ List [Atom "quote", x]
 
 parseExpr :: Parser LispVal
-parseExpr = parseAtom <|> parseString <|> parseNumber
+parseExpr =
+  parseAtom <|> parseString <|> parseNumber <|> parseQuoted <|> parseList
 
 readExpr :: Text -> String
-readExpr input = case parse (skipSpace >> parseExpr) input of
-  Fail _ _ err -> "No match: " ++ err
-  Partial _    -> "Partial result"
-  Done _ _     -> "Found value"
+readExpr input = case parseOnly (skipMany space >> parseExpr) input of
+  Left  err -> "No match: " ++ err
+  Right v   -> "Found value " ++ show v
