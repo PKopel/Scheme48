@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Types where
 
 import           RIO                     hiding ( toRational )
@@ -66,6 +67,7 @@ data LispVal = Atom String
              | Char Char
              | String String
              | Bool Bool
+             deriving(Eq, Ord)
 
 instance Show LispVal where
   show (String contents) = "\"" <> contents <> "\""
@@ -83,6 +85,13 @@ data NumType = Complex (Complex Double)
              | Real Double
              | Rational Rational
              | Integer Integer
+             deriving(Eq, Ord)
+
+instance Ord a => Ord (Complex a) where
+  compare (ar :+ ai) (br :+ bi) = case compare ar br of
+    EQ    -> compare ai bi
+    other -> other
+
 
 instance Show NumType where
   show (Integer  num       ) = show num
