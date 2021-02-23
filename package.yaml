@@ -25,6 +25,7 @@ dependencies:
   - attoparsec
   - containers
   - template-haskell
+  - mtl
 
 ghc-options:
   - -Wall

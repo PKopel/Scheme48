@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a809c29de99e89f6bd8642604674d8b0427efa036b8c8b7d65c775846eea693c
+-- hash: 03935bb1297374b9d770cb0deb3efb9b187a4f3bc19bf00f1b76c6aa0796aa41
 
 name:           Scheme48
 version:        0.0.0.1
@@ -42,6 +42,7 @@ library
       attoparsec
     , base >=4.11 && <10
     , containers
+    , mtl
     , rio >=0.1.12.0
     , template-haskell
   default-language: Haskell2010
@@ -58,6 +59,7 @@ executable Scheme48-exe
     , attoparsec
     , base >=4.11 && <10
     , containers
+    , mtl
     , optparse-simple
     , rio >=0.1.12.0
     , template-haskell
@@ -78,6 +80,7 @@ test-suite Scheme48-test
     , base >=4.11 && <10
     , containers
     , hspec
+    , mtl
     , rio >=0.1.12.0
     , template-haskell
   default-language: Haskell2010

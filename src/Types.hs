@@ -4,6 +4,7 @@ module Types where
 
 import           RIO                     hiding ( toRational )
 import           RIO.Process
+import           Control.Monad.Except
 import           Data.Complex                   ( Complex(..) )
 import           Data.Ratio                     ( denominator
                                                 , numerator
@@ -27,6 +28,35 @@ instance HasLogFunc App where
 instance HasProcessContext App where
   processContextL =
     lens appProcessContext (\x y -> x { appProcessContext = y })
+
+data LispError = NumArgs Integer [LispVal]
+               | TypeMismatch String LispVal
+               | Parser String
+               | BadSpecialForm String LispVal
+               | NotFunction String String
+               | UnboundVar String String
+               | Default String
+
+instance Show LispError where
+  show (UnboundVar     message varname) = message <> ": " <> varname
+  show (BadSpecialForm message form   ) = message <> ": " <> show form
+  show (NotFunction    message func   ) = message <> ": " <> show func
+  show (NumArgs expected found) =
+    "Expected " <> show expected <> " args; found values " <> unwords
+      (show <$> found)
+  show (TypeMismatch expected found) =
+    "Invalid type: expected " <> expected <> ", found " <> show found
+  show (Parser  parseErr) = "Parse error at " <> show parseErr
+  show (Default err     ) = err
+
+type ThrowsError = Either LispError
+
+trapError :: (MonadError a m, Show a) => m String -> m String
+trapError action = catchError action (return . show)
+
+extractValue :: ThrowsError a -> a
+extractValue (Right val) = val
+extractValue _           = undefined
 
 data LispVal = Atom String
              | List [LispVal]

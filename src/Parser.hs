@@ -6,6 +6,7 @@ module Parser where
 import           Import                  hiding ( try )
 import           Data.Attoparsec.Combinator
 import           Data.Attoparsec.Text
+import           Control.Monad.Except
 import           Data.Sequence                  ( fromList )
 import           Data.Complex                   ( Complex((:+)) )
 import           Data.Ratio                     ( (%) )
@@ -143,7 +144,7 @@ parseExpr =
     <|> parseList
     <|> parseAtom
 
-readExpr :: Text -> LispVal
+readExpr :: Text -> ThrowsError LispVal
 readExpr input = case parseOnly (skipMany space >> parseExpr) input of
-  Left  err -> String $ "No match: " ++ show err
-  Right val -> val
+  Left  err -> throwError $ Parser err
+  Right val -> return val

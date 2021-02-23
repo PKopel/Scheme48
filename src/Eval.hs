@@ -6,18 +6,23 @@ module Eval where
 import           Import
 import           Data.List                      ( foldl1 )
 import qualified Data.Map                      as Map
+import           Control.Monad.Except
 
-eval :: LispVal -> LispVal
-eval (List [Atom "quote", val]) = val
-eval (List (Atom func : args) ) = apply func $ map eval args
-eval (DottedList list val     ) = undefined
-eval (Vector vec              ) = undefined
-eval val                        = val
+eval :: LispVal -> ThrowsError LispVal
+eval val@(String _                  ) = return val
+eval val@(Number _                  ) = return val
+eval val@(Bool   _                  ) = return val
+eval (    List   [Atom "quote", val]) = return val
+eval (    List   (Atom func : args) ) = mapM eval args >>= apply func
+eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
-apply :: String -> [LispVal] -> LispVal
-apply func args = maybe (Bool False) ($ args) $ Map.lookup func primitives
+apply :: String -> [LispVal] -> ThrowsError LispVal
+apply func args =
+  maybe (throwError $ NotFunction "Unrecognized primitive function args" func)
+        ($ args)
+    $ Map.lookup func primitives
 
-primitives :: Map String ([LispVal] -> LispVal)
+primitives :: Map String ([LispVal] -> ThrowsError LispVal)
 primitives =
   [ ("+"             , numericBinop (+))
   , ("-"             , numericBinop (-))
@@ -35,21 +40,29 @@ primitives =
   , ("string->symbol", unaryOp str2sym)
   ]
 
-numericBinop :: (NumType -> NumType -> NumType) -> [LispVal] -> LispVal
-numericBinop op params = Number $ foldl1 op $ map unpackNum params
+numericBinop
+  :: (NumType -> NumType -> NumType) -> [LispVal] -> ThrowsError LispVal
+numericBinop _  []            = throwError $ NumArgs 2 []
+numericBinop _  singleVal@[_] = throwError $ NumArgs 2 singleVal
+numericBinop op params        = mapM unpackNum params <&> Number . foldl1 op
  where
-  unpackNum (Number n) = n
-  unpackNum _          = Integer 0
+  unpackNum :: LispVal -> ThrowsError NumType
+  unpackNum (Number n) = return n
+  unpackNum other      = throwError $ TypeMismatch "number" other
 
-intBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
-intBinop op params = Number . Integer $ foldl1 op $ map unpackInt params
+intBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
+intBinop _ [] = throwError $ NumArgs 2 []
+intBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
+intBinop op params = mapM unpackInt params <&> Number . Integer . foldl1 op
  where
-  unpackInt (Number (Integer n)) = n
-  unpackInt _                    = 0
+  unpackInt :: LispVal -> ThrowsError Integer
+  unpackInt (Number (Integer n)) = return n
+  unpackInt other                = throwError $ TypeMismatch "integer" other
 
-unaryOp :: (LispVal -> LispVal) -> [LispVal] -> LispVal
-unaryOp op [val] = op val
-unaryOp _  _     = undefined
+unaryOp :: (LispVal -> LispVal) -> [LispVal] -> ThrowsError LispVal
+unaryOp _  []    = throwError $ NumArgs 1 []
+unaryOp op [val] = return $ op val
+unaryOp _  args  = throwError $ NumArgs 2 args
 
 symbolp, numberp, stringp, boolp, listp, sym2str, str2sym :: LispVal -> LispVal
 symbolp (Atom _) = Bool True
