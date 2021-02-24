@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -67,7 +68,8 @@ data LispVal = Atom String
              | Char Char
              | String String
              | Bool Bool
-             deriving(Eq, Ord)
+             | MetaLispVal String
+             deriving(Eq, Ord, Data)
 
 instance Show LispVal where
   show (String contents) = "\"" <> contents <> "\""
@@ -79,13 +81,14 @@ instance Show LispVal where
   show (List   list    ) = "(" <> unwords (show <$> list) <> ")"
   show (DottedList list val) =
     "(" <> unwords (show <$> list) <> "." <> show val <> ")"
-  show (Vector vec) = "#(" <> unwords (toList (show <$> vec)) <> ")"
+  show (Vector      vec) = "#(" <> unwords (toList (show <$> vec)) <> ")"
+  show (MetaLispVal str) = "meta " <> str
 
 data NumType = Complex (Complex Double)
              | Real Double
              | Rational Rational
              | Integer Integer
-             deriving(Eq, Ord)
+             deriving(Eq, Ord, Data)
 
 instance Ord a => Ord (Complex a) where
   compare (ar :+ ai) (br :+ bi) = case compare ar br of

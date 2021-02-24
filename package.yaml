@@ -26,6 +26,7 @@ dependencies:
   - containers
   - template-haskell
   - mtl
+  - syb
 
 ghc-options:
   - -Wall
