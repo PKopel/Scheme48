@@ -53,11 +53,9 @@ equalp :: [LispVal] -> ThrowsError LispVal
 equalp [DottedList xs x, DottedList ys y] =
   equalp [List $ x : xs, List $ y : ys]
 equalp [List arg1, List arg2] =
-  return . Bool $ (length arg1 == length arg2) && all eqvPair (zip arg1 arg2)
- where
-  eqvPair (x1, x2) = case equalp [x1, x2] of
-    Right (Bool val) -> val
-    _                -> False
+  mapM equalPair (zip arg1 arg2) >>= boolMulop (&&) . (:)
+    (Bool (length arg1 == length arg2))
+  where equalPair (x1, x2) = equalp [x1, x2]
 equalp [arg1, arg2] = Bool . or <$> mapM
   (unpackEquals arg1 arg2)
   [ AnyUnpacker unpackNum
