@@ -45,7 +45,7 @@ eval form@(List (Atom "case" : key : clauses))
         else eval $ List (Atom "case" : key : tail clauses)
     _ -> throwError $ BadSpecialForm "ill-formed case expression: " form
 eval (List (Atom func : args)) = mapM eval args >>= apply func
-eval val@(List   _)                    = return val
+eval val@(List _) = return val
 eval badForm = throwError $ BadSpecialForm "unrecognized special form" badForm
 
 apply :: String -> [LispVal] -> ThrowsError LispVal

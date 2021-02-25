@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 82ab1c45eea01c3d44463d83131fef4068c36afbcfb80e9e8105c6bcdba5a451
+-- hash: 1b70887746d87ecbda58aa3bb2ecb82f88197d7339df91a9c4121ed2fd071e86
 
 name:           Scheme48
 version:        0.0.0.1
@@ -38,6 +38,9 @@ library
       REPL.Eval
       Run
       Utils.Types
+      Utils.Types.App
+      Utils.Types.Env
+      Utils.Types.Lisp
       Utils.Util
   other-modules:
       Paths_Scheme48

@@ -7,5 +7,5 @@ module Import
 where
 
 import           RIO
-import           Utils.Types             hiding ( toRational )
+import           Utils.Types
 import           Utils.Util
