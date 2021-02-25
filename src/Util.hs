@@ -9,6 +9,7 @@ module Util
   , boolMulop
   , unpackNum
   , unpackStr
+  , unpackChar
   , unpackBool
   )
 where
@@ -22,8 +23,8 @@ type Packer a = a -> LispVal
 type Unpacker a = LispVal -> ThrowsError a
 type Binop a b = a -> a -> b
 
-unop :: (LispVal -> LispVal) -> [LispVal] -> ThrowsError LispVal
-unop op [val] = return $ op val
+unop :: (LispVal -> ThrowsError LispVal) -> [LispVal] -> ThrowsError LispVal
+unop op [val] = op val
 unop _  args  = throwError $ NumArgs 1 args
 
 binop :: Unpacker a -> Packer b -> Binop a b -> [LispVal] -> ThrowsError LispVal
@@ -67,8 +68,12 @@ unpackStr :: Unpacker String
 unpackStr (String s) = return s
 unpackStr (Number s) = return $ show s
 unpackStr (Bool   s) = return $ show s
-unpackStr notString  = throwError $ TypeMismatch "string" notString
+unpackStr other      = throwError $ TypeMismatch "string" other
+
+unpackChar :: Unpacker Char
+unpackChar (Char c) = return c
+unpackChar other    = throwError $ TypeMismatch "char" other
 
 unpackBool :: Unpacker Bool
 unpackBool (Bool b) = return b
-unpackBool notBool  = throwError $ TypeMismatch "boolean" notBool
+unpackBool other    = throwError $ TypeMismatch "boolean" other

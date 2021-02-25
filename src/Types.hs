@@ -6,7 +6,7 @@ module Types where
 
 import           RIO                     hiding ( toRational )
 import           RIO.Process
-import           Control.Monad.Except
+import           Control.Monad.Except           ( MonadError(catchError) )
 import           Data.Complex                   ( Complex(..) )
 import           Data.Ratio                     ( denominator
                                                 , numerator

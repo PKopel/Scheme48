@@ -5,10 +5,13 @@ module Quote where
 
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
-import           Data.Generics
+import           Data.Generics                  ( extQ )
+import           Data.Attoparsec.Text           ( skipMany
+                                                , space
+                                                , parseOnly
+                                                )
+import           Parser                         ( parseExpr )
 import           Import
-import           Data.Attoparsec.Text
-import           Parser
 
 runParser :: MonadFail m => String -> m LispVal
 runParser str =

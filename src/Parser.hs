@@ -6,7 +6,7 @@ module Parser where
 import           Import                  hiding ( try )
 import           Data.Attoparsec.Combinator
 import           Data.Attoparsec.Text
-import           Control.Monad.Except
+import           Control.Monad.Except           ( MonadError(throwError) )
 import           Data.Sequence                  ( fromList )
 import           Data.Complex                   ( Complex((:+)) )
 import           Data.Ratio                     ( (%) )

@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 module Eval where
 
@@ -11,16 +10,15 @@ import           Data.List                      ( head
                                                 , last
                                                 )
 import           Control.Monad.Except           ( MonadError(throwError) )
-import           Primitives
-import           Util
+import           Primitives                     ( primitives )
 import           Quote                          ( lisp )
 
 eval :: LispVal -> ThrowsError LispVal
-eval val@(String _)                   = return val
-eval val@(Number _)                   = return val
-eval val@(Bool   _)                   = return val
-eval [lisp| (quote ?val)|]            = return val
-eval [lisp| (if ?pred ?conseq ?alt)|] = eval pred >>= \case
+eval val@(String _)                    = return val
+eval val@(Number _)                    = return val
+eval val@(Bool   _)                    = return val
+eval [lisp| (quote ?val) |]            = return val
+eval [lisp| (if ?pred ?conseq ?alt) |] = eval pred >>= \case
   Bool False -> eval alt
   Bool True  -> eval conseq
   _          -> throwError $ TypeMismatch "bool" pred
@@ -28,8 +26,8 @@ eval form@(List (Atom "cond" : clauses))
   | null clauses = throwError
   $ BadSpecialForm "no true clause in cond expression: " form
   | otherwise = case head clauses of
-    [lisp| (else ?expr)|] -> eval expr
-    [lisp| (?test ?expr)|] -> eval [lisp| (if ?test ?expr ?alt)|]
+    [lisp| (else ?expr) |] -> eval expr
+    [lisp| (?test ?expr) |] -> eval [lisp| (if ?test ?expr ?alt) |]
     _ -> throwError $ BadSpecialForm "ill-formed cond expression: " form
   where alt = List (Atom "cond" : tail clauses)
 eval form@(List (Atom "case" : key : clauses))
@@ -53,43 +51,6 @@ apply func args =
         ($ args)
     $ Map.lookup func primitives
 
-
-primitives :: Map String ([LispVal] -> ThrowsError LispVal)
-primitives =
-  [ ("+"             , numMulop (+))
-  , ("-"             , numMulop (-))
-  , ("*"             , numMulop (*))
-  , ("/"             , numMulop (/))
-  , ("modulo"        , intBinop mod)
-  , ("quotient"      , intBinop quot)
-  , ("remainder"     , intBinop rem)
-  , ("symbol?"       , unop symbolp)
-  , ("string?"       , unop stringp)
-  , ("number?"       , unop numberp)
-  , ("bool?"         , unop boolp)
-  , ("list?"         , unop listp)
-  , ("symbol->string", unop sym2str)
-  , ("string->symbol", unop str2sym)
-  , ("="             , numBoolBinop (==))
-  , ("<"             , numBoolBinop (<))
-  , (">"             , numBoolBinop (>))
-  , ("/="            , numBoolBinop (/=))
-  , (">="            , numBoolBinop (>=))
-  , ("<="            , numBoolBinop (<=))
-  , ("&&"            , boolMulop (&&))
-  , ("||"            , boolMulop (||))
-  , ("string=?"      , strBoolBinop (==))
-  , ("string<?"      , strBoolBinop (<))
-  , ("string>?"      , strBoolBinop (>))
-  , ("string<=?"     , strBoolBinop (<=))
-  , ("string>=?"     , strBoolBinop (>=))
-  , ("car"           , car)
-  , ("cdr"           , cdr)
-  , ("cons"          , cons)
-  , ("eq?"           , valBoolBinop (==))
-  , ("eqv?"          , valBoolBinop (==))
-  , ("equal?"        , equalp)
-  ]
 
 
 

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63d928eb23607dc04f601714fcbddd99a42dc54d7b2d6b7ef7a62b56608c4552
+-- hash: 2c73d6677c8a1011302164e049a8403eebb698329799b9bd332655e00e133471
 
 name:           Scheme48
 version:        0.0.0.1
@@ -31,6 +31,9 @@ library
       Import
       Parser
       Primitives
+      Primitives.List
+      Primitives.String
+      Primitives.Types
       Quote
       Run
       Types
