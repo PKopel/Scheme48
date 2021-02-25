@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE OverloadedLists #-}
 module Lang.Primitives where
 
 import           Import
@@ -11,7 +10,12 @@ import           Control.Monad.Except           ( MonadError(..) )
 
 data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
 
-primitives :: Map String ([LispVal] -> ThrowsError LispVal)
+primitiveBindings :: RIO a Env
+primitiveBindings = nullEnv
+  >>= flip bindVars (map makePrimitiveFunc primitives)
+  where makePrimitiveFunc (var, func) = (var, Function (PrimFun func))
+
+primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =
   [ ("+"             , numMulop (+))
   , ("-"             , numMulop (-))

@@ -2,9 +2,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module Utils.Types.Lisp
-  ( LispVal(..)
-  , NumType(..)
+module Utils.Types.Num
+  ( NumType(..)
   )
 where
 
@@ -14,32 +13,6 @@ import           Data.Ratio                     ( denominator
                                                 , numerator
                                                 , (%)
                                                 )
-
-data LispVal = Atom String
-             | List [LispVal]
-             | Vector (Seq LispVal)
-             | DottedList [LispVal] LispVal
-             | Number NumType
-             | Char Char
-             | String String
-             | Bool Bool
-             | MetaVal String
-             | MetaAtom String
-             deriving(Eq, Ord, Data)
-
-instance Show LispVal where
-  show (String contents) = "\"" <> contents <> "\""
-  show (Atom   name    ) = name
-  show (Bool   True    ) = "#t"
-  show (Bool   False   ) = "#f"
-  show (Number contents) = show contents
-  show (Char   char    ) = ['#', '\\', char]
-  show (List   list    ) = "(" <> unwords (show <$> list) <> ")"
-  show (DottedList list val) =
-    "(" <> unwords (show <$> list) <> "." <> show val <> ")"
-  show (Vector   vec) = "#(" <> unwords (toList (show <$> vec)) <> ")"
-  show (MetaVal  str) = "meta " <> str
-  show (MetaAtom str) = "meta atom " <> str
 
 data NumType = Complex (Complex Double)
              | Real Double

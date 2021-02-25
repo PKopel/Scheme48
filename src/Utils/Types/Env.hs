@@ -1,10 +1,42 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ExistentialQuantification #-}
 module Utils.Types.Env where
 
 import           RIO
-import           Utils.Types.Lisp
+import           Utils.Types.Num
+import           Utils.Types.App
 import           Control.Monad.Except
+import           Data.Data
 
+
+data LispVal = Atom String
+             | List [LispVal]
+             | Vector (Seq LispVal)
+             | DottedList [LispVal] LispVal
+             | Number NumType
+             | Char Char
+             | String String
+             | Bool Bool
+             | Function FunType
+             | MetaVal String
+             | MetaAtom String
+             deriving(Eq, Ord, Data)
+
+instance Show LispVal where
+  show (String contents) = "\"" <> contents <> "\""
+  show (Atom   name    ) = name
+  show (Bool   True    ) = "#t"
+  show (Bool   False   ) = "#f"
+  show (Number contents) = show contents
+  show (Char   char    ) = ['#', '\\', char]
+  show (List   list    ) = "(" <> unwords (show <$> list) <> ")"
+  show (DottedList list val) =
+    "(" <> unwords (show <$> list) <> "." <> show val <> ")"
+  show (Vector   vec) = "#(" <> unwords (toList (show <$> vec)) <> ")"
+  show (MetaVal  str) = "meta " <> str
+  show (MetaAtom str) = "meta atom " <> str
+  show (Function fun) = show fun
 
 data LispError = NumArgs Integer [LispVal]
                | TypeMismatch String LispVal
@@ -75,10 +107,49 @@ defineVar envRef var value = do
       writeIORef envRef ((var, valueRef) : env)
       return value
 
-bindVars :: Env -> [(String, LispVal)] -> IO Env
+bindVars :: Env -> [(String, LispVal)] -> RIO a Env
 bindVars envRef bindings = readIORef envRef >>= extendEnv >>= newIORef
  where
   extendEnv env = (++ env) <$> mapM addBinding bindings
   addBinding (var, value) = do
     ref <- newIORef value
     return (var, ref)
+
+data Fun = Fun  [String]  (Maybe String) [LispVal] Env
+
+data FunType = UsrFun Fun
+             | PrimFun ([LispVal] -> ThrowsError LispVal)
+             | IOFun ([LispVal] -> IOThrowsError App LispVal)
+             | Mock
+
+instance Eq FunType where
+  (==) = const (const True)
+
+instance Ord FunType where
+  compare = const (const EQ)
+
+instance Show FunType where
+  show (UsrFun (Fun p v _ _)) =
+    "(lambda ("
+      <> unwords (show <$> p)
+      <> (case v of
+           Nothing  -> ""
+           Just arg -> " . " <> arg
+         )
+      <> ") ...)"
+  show _ = "<function>"
+
+
+instance Data FunType where
+  gunfold _ z _ = z Mock
+  toConstr (UsrFun  _) = con "UsrFun"
+  toConstr (PrimFun _) = con "PrimFun"
+  toConstr (IOFun   _) = con "IOFun"
+  toConstr Mock        = con "Mock"
+  dataTypeOf _ = tyFunType
+
+con :: String -> Constr
+con name = mkConstr tyFunType name [] Prefix
+tyFunType :: DataType
+tyFunType =
+  mkDataType "Module.T" [con "UsrFun", con "PrimFun", con "IOFun", con "Mock"]

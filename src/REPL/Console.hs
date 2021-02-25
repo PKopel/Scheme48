@@ -16,10 +16,11 @@ import           System.Console.Pretty          ( Color(Green, Red)
                                                 , Style(Faint)
                                                 )
 import           Lang.Parser                    ( readExpr )
+import Lang.Primitives ( primitiveBindings )
 import           REPL.Eval                      ( eval )
 
 startREPL :: Settings (RIO App) -> RIO App ()
-startREPL settings = nullEnv >>= \env -> runInputT settings $ runLine env Green
+startREPL settings = primitiveBindings >>= \env -> runInputT settings $ runLine env Green
 
 runLine :: Env -> Color -> InputT (RIO App) ()
 runLine env colour = do
@@ -35,6 +36,6 @@ checkLine env (Just line)
     Right val -> lift (logInfo (fromString val)) >> runLine env Green
 checkLine _ _ = return ()
 
-evalString :: Env -> Text -> InputT (RIO a) (ThrowsError String)
+evalString :: Env -> Text -> InputT (RIO App) (ThrowsError String)
 evalString env expr =
   lift . runIOThrows $ liftThrows (readExpr expr) >>= eval env <&> show
