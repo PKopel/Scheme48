@@ -15,25 +15,26 @@ import           System.Console.Pretty          ( Color(Green, Red)
                                                 , Pretty(color, style)
                                                 , Style(Faint)
                                                 )
-import           Lang.Parser
-import           REPL.Eval
+import           Lang.Parser                    ( readExpr )
+import           REPL.Eval                      ( eval )
 
 startREPL :: Settings (RIO App) -> RIO App ()
-startREPL settings = runInputT settings $ runLine Green
+startREPL settings = nullEnv >>= \env -> runInputT settings $ runLine env Green
 
-runLine :: Color -> InputT (RIO App) ()
-runLine colour = do
+runLine :: Env -> Color -> InputT (RIO App) ()
+runLine env colour = do
   line <- getInputLine $ (style Faint . color colour) "S48" <> "> "
-  checkLine $ strip . fromString <$> line
+  checkLine env $ strip . fromString <$> line
 
-checkLine :: Maybe Text -> InputT (RIO App) ()
-checkLine (Just "quit") = return ()
-checkLine (Just line)
-  | Text.null line = runLine Green
-  | otherwise = evalString line >>= \case
-    Left  err -> lift (logError (fromString $ show err)) >> runLine Red
-    Right val -> lift (logInfo (fromString val)) >> runLine Green
-checkLine _ = return ()
+checkLine :: Env -> Maybe Text -> InputT (RIO App) ()
+checkLine _ (Just "quit") = return ()
+checkLine env (Just line)
+  | Text.null line = runLine env Green
+  | otherwise = evalString env line >>= \case
+    Left  err -> lift (logError (fromString $ show err)) >> runLine env Red
+    Right val -> lift (logInfo (fromString val)) >> runLine env Green
+checkLine _ _ = return ()
 
-evalString :: Text -> InputT (RIO a) (ThrowsError String)
-evalString expr = return $ readExpr expr >>= eval <&> show
+evalString :: Env -> Text -> InputT (RIO a) (ThrowsError String)
+evalString env expr =
+  lift . runIOThrows $ liftThrows (readExpr expr) >>= eval env <&> show

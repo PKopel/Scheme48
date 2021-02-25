@@ -133,8 +133,14 @@ parseUnquote = parseQuotes "," (Atom "unquote")
 parseUnquoteSplicing :: Parser LispVal
 parseUnquoteSplicing = parseQuotes ",@" (Atom "unquote-splicing")
 
+parseMetaVal :: Parser LispVal
+parseMetaVal = char '@' *> many1 letter <&> MetaVal
+
+parseMetaAtom :: Parser LispVal
+parseMetaAtom = "@atom:" *> many1 letter <&> MetaAtom
+
 parseMeta :: Parser LispVal
-parseMeta = char '?' *> many1 letter <&> MetaLispVal
+parseMeta = try parseMetaAtom <|> parseMetaVal
 
 parseExpr :: Parser LispVal
 parseExpr =

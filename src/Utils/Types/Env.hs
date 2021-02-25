@@ -45,8 +45,8 @@ liftThrows :: ThrowsError a -> IOThrowsError b a
 liftThrows (Left  err) = throwError err
 liftThrows (Right val) = return val
 
-runIOThrows :: IOThrowsError a String -> RIO a String
-runIOThrows action = runExceptT (trapError action) <&> extractValue
+runIOThrows :: IOThrowsError a String -> RIO a (ThrowsError String)
+runIOThrows action = runExceptT (trapError action)
 
 isBound :: Env -> String -> IO Bool
 isBound envRef var = readIORef envRef <&> isJust . lookup var
@@ -61,14 +61,14 @@ withEnv ioRefOp envRef var = do
 getVar :: Env -> String -> IOThrowsError a LispVal
 getVar = withEnv readIORef
 
-setVar :: LispVal -> Env -> String -> IOThrowsError a LispVal
-setVar value envRef var = withEnv (`writeIORef` value) envRef var $> value
+setVar :: Env -> String -> LispVal -> IOThrowsError a LispVal
+setVar envRef var value = withEnv (`writeIORef` value) envRef var $> value
 
 defineVar :: Env -> String -> LispVal -> IOThrowsError a LispVal
 defineVar envRef var value = do
   alreadyDefined <- liftIO $ isBound envRef var
   if alreadyDefined
-    then setVar value envRef var >> return value
+    then setVar envRef var value >> return value
     else liftIO $ do
       valueRef <- newIORef value
       env      <- readIORef envRef

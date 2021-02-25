@@ -34,13 +34,14 @@ lispExp :: String -> Q Exp
 lispExp str = runParser str >>= dataToExpQ (const Nothing `extQ` metaExprExp)
 
 metaExprExp :: LispVal -> Maybe (Q Exp)
-metaExprExp (MetaLispVal v) = Just $ varE (mkName v)
-metaExprExp _               = Nothing
+metaExprExp (MetaVal v) = Just $ varE (mkName v)
+metaExprExp _           = Nothing
 
 lispPat :: String -> Q Pat
 lispPat str = runParser str >>= dataToPatQ (const Nothing `extQ` metaExprPat)
 
 
 metaExprPat :: LispVal -> Maybe (Q Pat)
-metaExprPat (MetaLispVal v) = Just $ varP (mkName v)
-metaExprPat _               = Nothing
+metaExprPat (MetaVal  v) = Just $ varP (mkName v)
+metaExprPat (MetaAtom v) = Just $ conP (mkName "Atom") [varP (mkName v)]
+metaExprPat _            = Nothing
