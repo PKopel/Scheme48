@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuasiQuotes #-}
-module Eval where
+module REPL.Eval where
 
 import           Import
 import qualified Data.Map                      as Map
@@ -10,13 +10,15 @@ import           Data.List                      ( head
                                                 , last
                                                 )
 import           Control.Monad.Except           ( MonadError(throwError) )
-import           Primitives                     ( primitives )
-import           Quote                          ( lisp )
+import           Lang.Primitives                ( primitives )
+import           Lang.Quote                     ( lisp )
 
 eval :: LispVal -> ThrowsError LispVal
 eval val@(String _)                    = return val
 eval val@(Number _)                    = return val
 eval val@(Bool   _)                    = return val
+eval val@(Char   _)                    = return val
+eval val@(Atom   _)                    = return val
 eval [lisp| (quote ?val) |]            = return val
 eval [lisp| (if ?pred ?conseq ?alt) |] = eval pred >>= \case
   Bool False -> eval alt
@@ -43,6 +45,7 @@ eval form@(List (Atom "case" : key : clauses))
         else eval $ List (Atom "case" : key : tail clauses)
     _ -> throwError $ BadSpecialForm "ill-formed case expression: " form
 eval (List (Atom func : args)) = mapM eval args >>= apply func
+eval val@(List   _)                    = return val
 eval badForm = throwError $ BadSpecialForm "unrecognized special form" badForm
 
 apply :: String -> [LispVal] -> ThrowsError LispVal

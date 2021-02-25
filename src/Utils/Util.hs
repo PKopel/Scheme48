@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Util
+module Utils.Util
   ( unop
   , intBinop
   , numBoolBinop
@@ -17,7 +17,7 @@ where
 import           RIO
 import           Control.Monad.Except           ( MonadError(throwError) )
 import           Data.List                      ( foldl1 )
-import           Types
+import           Utils.Types
 
 type Packer a = a -> LispVal
 type Unpacker a = LispVal -> ThrowsError a

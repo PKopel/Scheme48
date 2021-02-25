@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Parser where
+module Lang.Parser where
 
 import           Import                  hiding ( try )
 import           Data.Attoparsec.Combinator
@@ -31,7 +31,7 @@ escaped :: Parser Char
 escaped = char '\\' *> oneOf "\\\"\'nrt"
 
 parseChar :: Parser LispVal
-parseChar = "#\\" *> (name <|> letter <|> symbol) <&> Char
+parseChar = "#\\" *> (name <|> letter <|> symbol <|> oneOf "\\\"\'") <&> Char
   where name = ("space" $> ' ') <|> ("newline" $> '\n')
 
 parseString :: Parser LispVal
@@ -139,14 +139,15 @@ parseMeta = char '?' *> many1 letter <&> MetaLispVal
 parseExpr :: Parser LispVal
 parseExpr =
   parseMeta
-    <|> parseString
-    <|> parseNumber
-    <|> parseQuote
-    <|> parseQuasiquote
-    <|> parseUnquote
-    <|> parseVector
-    <|> parseList
-    <|> parseAtom
+    <|> try parseChar
+    <|> try parseString
+    <|> try parseNumber
+    <|> try parseList
+    <|> try parseVector
+    <|> try parseQuote
+    <|> try parseQuasiquote
+    <|> try parseUnquote
+    <|> try parseAtom
 
 readExpr :: Text -> ThrowsError LispVal
 readExpr input = case parseOnly (skipMany space >> parseExpr) input of

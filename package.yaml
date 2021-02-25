@@ -22,11 +22,15 @@ description: Please see the README on Github at <https://github.com/PKopel/Schem
 dependencies:
   - base >= 4.11 && < 10
   - rio >= 0.1.12.0
+  - rio-orphans >= 0.1.1.0
   - attoparsec
   - containers
   - template-haskell
   - mtl
   - syb
+  - text
+  - haskeline >= 0.8
+  - pretty-terminal
 
 ghc-options:
   - -Wall
@@ -41,7 +45,7 @@ library:
   source-dirs: src
 
 executables:
-  Scheme48-exe:
+  s48:
     main: Main.hs
     source-dirs: app
     dependencies:

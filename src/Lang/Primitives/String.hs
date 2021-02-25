@@ -1,9 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Primitives.String where
+module Lang.Primitives.String where
 
 import           Import
 import           Data.List                      ( (!!) )
-import           Util                           ( unpackStr )
 import           Data.Char                      ( toLower )
 import           Control.Monad.Except           ( MonadError(throwError) )
 

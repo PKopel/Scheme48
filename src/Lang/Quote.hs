@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
-module Quote where
+module Lang.Quote where
 
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
@@ -10,7 +10,7 @@ import           Data.Attoparsec.Text           ( skipMany
                                                 , space
                                                 , parseOnly
                                                 )
-import           Parser                         ( parseExpr )
+import           Lang.Parser                    ( parseExpr )
 import           Import
 
 runParser :: MonadFail m => String -> m LispVal

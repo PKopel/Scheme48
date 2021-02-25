@@ -1,13 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedLists #-}
-module Primitives where
+module Lang.Primitives where
 
 import           Import
-import           Util
-import           Primitives.Types
-import           Primitives.String
-import           Primitives.List
+import           Lang.Primitives.Types
+import           Lang.Primitives.String
+import           Lang.Primitives.List
 import           Control.Monad.Except           ( MonadError(..) )
 
 data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
@@ -28,8 +27,8 @@ primitives =
   , ("list?"         , unop (return . listp))
   , ("symbol->string", unop sym2str)
   , ("string->symbol", unop str2sym)
-  , ("list->string"  , unop sym2str)
-  , ("string->list"  , unop str2sym)
+  , ("list->string"  , unop list2str)
+  , ("string->list"  , unop str2list)
   , ("="             , numBoolBinop (==))
   , ("<"             , numBoolBinop (<))
   , (">"             , numBoolBinop (>))

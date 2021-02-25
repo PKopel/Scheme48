@@ -1,9 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module Import
   ( module RIO
-  , module Types
+  , module Utils.Types
+  , module Utils.Util
   )
 where
 
 import           RIO
-import           Types                   hiding ( toRational )
+import           Utils.Types             hiding ( toRational )
+import           Utils.Util

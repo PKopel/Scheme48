@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2c73d6677c8a1011302164e049a8403eebb698329799b9bd332655e00e133471
+-- hash: 82ab1c45eea01c3d44463d83131fef4068c36afbcfb80e9e8105c6bcdba5a451
 
 name:           Scheme48
 version:        0.0.0.1
@@ -27,17 +27,18 @@ source-repository head
 
 library
   exposed-modules:
-      Eval
       Import
-      Parser
-      Primitives
-      Primitives.List
-      Primitives.String
-      Primitives.Types
-      Quote
+      Lang.Parser
+      Lang.Primitives
+      Lang.Primitives.List
+      Lang.Primitives.String
+      Lang.Primitives.Types
+      Lang.Quote
+      REPL.Console
+      REPL.Eval
       Run
-      Types
-      Util
+      Utils.Types
+      Utils.Util
   other-modules:
       Paths_Scheme48
   hs-source-dirs:
@@ -47,13 +48,17 @@ library
       attoparsec
     , base >=4.11 && <10
     , containers
+    , haskeline >=0.8
     , mtl
+    , pretty-terminal
     , rio >=0.1.12.0
+    , rio-orphans >=0.1.1.0
     , syb
     , template-haskell
+    , text
   default-language: Haskell2010
 
-executable Scheme48-exe
+executable s48
   main-is: Main.hs
   other-modules:
       Paths_Scheme48
@@ -65,11 +70,15 @@ executable Scheme48-exe
     , attoparsec
     , base >=4.11 && <10
     , containers
+    , haskeline >=0.8
     , mtl
     , optparse-simple
+    , pretty-terminal
     , rio >=0.1.12.0
+    , rio-orphans >=0.1.1.0
     , syb
     , template-haskell
+    , text
   default-language: Haskell2010
 
 test-suite Scheme48-test
@@ -86,9 +95,13 @@ test-suite Scheme48-test
     , attoparsec
     , base >=4.11 && <10
     , containers
+    , haskeline >=0.8
     , hspec
     , mtl
+    , pretty-terminal
     , rio >=0.1.12.0
+    , rio-orphans >=0.1.1.0
     , syb
     , template-haskell
+    , text
   default-language: Haskell2010

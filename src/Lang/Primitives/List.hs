@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Primitives.List where
+module Lang.Primitives.List where
 
 import           Import
 import           Control.Monad.Except           ( MonadError(throwError) )

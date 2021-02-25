@@ -1,8 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Primitives.Types where
+module Lang.Primitives.Types where
 
 import           Import
-import           Util                           ( unpackChar )
 import           Control.Monad.Except           ( MonadError(..) )
 
 

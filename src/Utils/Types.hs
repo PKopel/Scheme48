@@ -2,10 +2,12 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module Types where
+module Utils.Types where
 
 import           RIO                     hiding ( toRational )
 import           RIO.Process
+import           Data.Version                   ( Version )
+import           System.Console.Haskeline       ( Settings )
 import           Control.Monad.Except           ( MonadError(catchError) )
 import           Data.Complex                   ( Complex(..) )
 import           Data.Ratio                     ( denominator
@@ -21,8 +23,9 @@ newtype Options = Options
 data App = App
   { appLogFunc :: !LogFunc
   , appProcessContext :: !ProcessContext
-  , appOptions :: !Options
-  -- Add other app-specific configuration information here
+  , appOptions :: !Options,
+    appSettings :: !(Settings (RIO App)),
+    appVersion :: !Version
   }
 
 instance HasLogFunc App where
@@ -77,7 +80,7 @@ instance Show LispVal where
   show (Bool   True    ) = "#t"
   show (Bool   False   ) = "#f"
   show (Number contents) = show contents
-  show (Char   char    ) = [char]
+  show (Char   char    ) = ['#', '\\', char]
   show (List   list    ) = "(" <> unwords (show <$> list) <> ")"
   show (DottedList list val) =
     "(" <> unwords (show <$> list) <> "." <> show val <> ")"
