@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a7c4719bc9dac69f6bdccdd56c2cf3985cbc836e7b806e4f56baaf8f6cc63efe
+-- hash: e044948ba2be2206d25803d2d96dbfaa7d537fec1b0817020d8bb31b92395288
 
 name:           Scheme48
-version:        0.0.0.3
+version:        0.0.0.4
 description:    Please see the README on Github at <https://github.com/PKopel/Scheme48#readme>
 homepage:       https://github.com/PKopel/Scheme48#readme
 bug-reports:    https://github.com/PKopel/Scheme48/issues
@@ -30,6 +30,7 @@ library
       Import
       Lang.Parser
       Lang.Primitives
+      Lang.Primitives.IO
       Lang.Primitives.List
       Lang.Primitives.String
       Lang.Primitives.Types

@@ -1,5 +1,9 @@
 # Changelog for Scheme48
 
+### 0.0.0.4
+* add IO functions
+* extend quasiquoter to match strings
+
 ### 0.0.0.3
 * add support for function definition
 

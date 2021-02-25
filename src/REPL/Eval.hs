@@ -10,14 +10,18 @@ import           Data.List                      ( head
                                                 )
 import           Control.Monad.Except           ( MonadError(throwError) )
 import           Lang.Quote                     ( lisp )
+import Lang.Primitives.IO ( load )
 
 eval :: Env -> LispVal -> IOThrowsError App LispVal
-eval _   val@(String _  )                  = return val
-eval _   val@(Number _  )                  = return val
-eval _   val@(Bool   _  )                  = return val
-eval _   val@(Char   _  )                  = return val
-eval env (    Atom   var)                  = getVar env var
+eval _   val@(String _)                    = return val
+eval _   val@(Number _)                    = return val
+eval _   val@(Bool   _)                    = return val
+eval _   val@(Char   _)                    = return val
+eval env [lisp| @atom:var |]               = getVar env var
 eval _   [lisp| (quote @val) |]            = return val
+eval _   [lisp| (apply @fun @list:args) |] = apply fun args
+eval env [lisp| (load @str:filename) |] =
+  load filename >>= fmap last . mapM (eval env)
 eval env [lisp| (set! @atom:var @val) |]   = eval env val >>= setVar env var
 eval env [lisp| (define @atom:var @val) |] = eval env val >>= defineVar env var
 eval env (List (Atom "define" : List (Atom var : params) : body)) =
@@ -39,9 +43,9 @@ eval env form@(List (Atom "cond" : clauses))
   $ BadSpecialForm "no true clause in cond expression: " form
   | otherwise = case head clauses of
     [lisp| (else @expr) |] -> eval env expr
-    [lisp| (@test @expr) |] -> eval env [lisp| (if @test @expr @alt) |]
+    [lisp| (@test @expr) |] -> eval env [lisp| (if @test @expr @list:alt) |]
     _ -> throwError $ BadSpecialForm "ill-formed cond expression: " form
-  where alt = List (Atom "cond" : tail clauses)
+  where alt = Atom "cond" : tail clauses
 eval env form@(List (Atom "case" : key : clauses))
   | null clauses = throwError
   $ BadSpecialForm "no true clause in case expression: " form
@@ -62,9 +66,9 @@ eval _ badForm =
   throwError $ BadSpecialForm "unrecognized special form" badForm
 
 apply :: LispVal -> [LispVal] -> IOThrowsError App LispVal
-apply (Function (IOFun   func)) args = func args
-apply (Function (PrimFun func)) args = liftThrows $ func args
-apply (Function (UsrFun (Fun params varargs body closure))) args =
+apply (Internal (IOFun   func)) args = func args
+apply (Internal (PrimFun func)) args = liftThrows $ func args
+apply (Internal (UsrFun (Fun params varargs body closure))) args =
   if num params /= num args && isNothing varargs
     then throwError $ NumArgs (num params) args
     else
@@ -83,7 +87,7 @@ apply val _ = throwError $ NotFunction "unrecognized function" $ show val
 makeFunc
   :: (Monad m, Show a) => Maybe String -> Env -> [a] -> [LispVal] -> m LispVal
 makeFunc varargs env params body =
-  return . Function . UsrFun $ Fun (map show params) varargs body env
+  return . Internal . UsrFun $ Fun (map show params) varargs body env
 
 makeNormalFunc :: Env -> [LispVal] -> [LispVal] -> IOThrowsError App LispVal
 makeNormalFunc = makeFunc Nothing

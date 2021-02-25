@@ -18,9 +18,11 @@ data LispVal = Atom String
              | Char Char
              | String String
              | Bool Bool
-             | Function FunType
+             | Internal InType
              | MetaVal String
              | MetaAtom String
+             | MetaList String
+             | MetaString String
              deriving(Eq, Ord, Data)
 
 instance Show LispVal where
@@ -33,10 +35,12 @@ instance Show LispVal where
   show (List   list    ) = "(" <> unwords (show <$> list) <> ")"
   show (DottedList list val) =
     "(" <> unwords (show <$> list) <> "." <> show val <> ")"
-  show (Vector   vec) = "#(" <> unwords (toList (show <$> vec)) <> ")"
-  show (MetaVal  str) = "meta " <> str
-  show (MetaAtom str) = "meta atom " <> str
-  show (Function fun) = show fun
+  show (Vector     vec) = "#(" <> unwords (toList (show <$> vec)) <> ")"
+  show (MetaVal    str) = "meta " <> str
+  show (MetaAtom   str) = "meta atom " <> str
+  show (MetaList   str) = "meta list " <> str
+  show (MetaString str) = "meta string " <> str
+  show (Internal   val) = show val
 
 data LispError = NumArgs Integer [LispVal]
                | TypeMismatch String LispVal
@@ -117,18 +121,20 @@ bindVars envRef bindings = readIORef envRef >>= extendEnv >>= newIORef
 
 data Fun = Fun  [String]  (Maybe String) [LispVal] Env
 
-data FunType = UsrFun Fun
+data InType = UsrFun Fun
              | PrimFun ([LispVal] -> ThrowsError LispVal)
              | IOFun ([LispVal] -> IOThrowsError App LispVal)
+             | Port Handle
              | Mock
 
-instance Eq FunType where
+instance Eq InType where
   (==) = const (const True)
 
-instance Ord FunType where
+instance Ord InType where
   compare = const (const EQ)
 
-instance Show FunType where
+instance Show InType where
+  show (Port _) = "<IO port>"
   show (UsrFun (Fun p v _ _)) =
     "(lambda ("
       <> unwords (show <$> p)
@@ -140,11 +146,12 @@ instance Show FunType where
   show _ = "<function>"
 
 
-instance Data FunType where
+instance Data InType where
   gunfold _ z _ = z Mock
   toConstr (UsrFun  _) = con "UsrFun"
   toConstr (PrimFun _) = con "PrimFun"
   toConstr (IOFun   _) = con "IOFun"
+  toConstr (Port    _) = con "Port"
   toConstr Mock        = con "Mock"
   dataTypeOf _ = tyFunType
 

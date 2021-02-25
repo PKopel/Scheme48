@@ -5,7 +5,7 @@ module REPL.Console where
 
 import           Import
 import           RIO.Orphans                    ( )
-import           Data.Text                     as Text
+import Data.Text as Text ( null, strip )
 import           System.Console.Haskeline       ( InputT
                                                 , Settings
                                                 , getInputLine
@@ -16,11 +16,12 @@ import           System.Console.Pretty          ( Color(Green, Red)
                                                 , Style(Faint)
                                                 )
 import           Lang.Parser                    ( readExpr )
-import Lang.Primitives ( primitiveBindings )
+import           Lang.Primitives                ( primitiveBindings )
 import           REPL.Eval                      ( eval )
 
 startREPL :: Settings (RIO App) -> RIO App ()
-startREPL settings = primitiveBindings >>= \env -> runInputT settings $ runLine env Green
+startREPL settings =
+  primitiveBindings >>= \env -> runInputT settings $ runLine env Green
 
 runLine :: Env -> Color -> InputT (RIO App) ()
 runLine env colour = do

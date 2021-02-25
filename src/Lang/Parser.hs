@@ -96,66 +96,92 @@ parseNumber =
     <|> try parseComplex
     <&> Number
 
-parseList :: Parser LispVal
-parseList = do
+parseList :: Parser LispVal -> Parser LispVal
+parseList recParser = do
   char '(' *> skipSpaces
-  inits <- sepBy parseExpr skipSpaces
+  inits <- sepBy recParser skipSpaces
   last  <- skipSpaces *> oneOf ".)"
   case last of
     ')' -> return $ List inits
-    _ -> skipSpaces *> parseExpr <* skipSpaces <* char ')' <&> DottedList inits
+    _ -> skipSpaces *> recParser <* skipSpaces <* char ')' <&> DottedList inits
 
-parseVector :: Parser LispVal
-parseVector =
+parseVector :: Parser LispVal -> Parser LispVal
+parseVector recParser =
   "#("
     *>  skipSpaces
-    *>  sepBy parseExpr skipSpaces
+    *>  sepBy recParser skipSpaces
     <*  skipSpaces
     <*  char ')'
     <&> Vector
     .   fromList
 
-parseQuotes :: Text -> LispVal -> Parser LispVal
-parseQuotes c val = do
+parseQuotes :: Text -> LispVal -> Parser LispVal -> Parser LispVal
+parseQuotes c val recParser = do
   _ <- string c
-  x <- parseExpr
+  x <- recParser
   return $ List [val, x]
 
-parseQuasiquote :: Parser LispVal
+parseQuasiquote :: Parser LispVal -> Parser LispVal
 parseQuasiquote = parseQuotes "`" (Atom "quasiquote")
 
-parseQuote :: Parser LispVal
+parseQuote :: Parser LispVal -> Parser LispVal
 parseQuote = parseQuotes "\'" (Atom "quote")
 
-parseUnquote :: Parser LispVal
+parseUnquote :: Parser LispVal -> Parser LispVal
 parseUnquote = parseQuotes "," (Atom "unquote")
 
-parseUnquoteSplicing :: Parser LispVal
+parseUnquoteSplicing :: Parser LispVal -> Parser LispVal
 parseUnquoteSplicing = parseQuotes ",@" (Atom "unquote-splicing")
 
 parseMetaVal :: Parser LispVal
-parseMetaVal = char '@' *> many1 letter <&> MetaVal
+parseMetaVal = many1 letter <&> MetaVal
 
 parseMetaAtom :: Parser LispVal
-parseMetaAtom = "@atom:" *> many1 letter <&> MetaAtom
+parseMetaAtom = "atom:" *> many1 letter <&> MetaAtom
+
+parseMetaList :: Parser LispVal
+parseMetaList = "list:" *> many1 letter <&> MetaList
+
+parseMetaString :: Parser LispVal
+parseMetaString = "str:" *> many1 letter <&> MetaString
 
 parseMeta :: Parser LispVal
-parseMeta = try parseMetaAtom <|> parseMetaVal
+parseMeta =
+  char '@'
+    *> (parseMetaAtom <|> parseMetaList <|> parseMetaString <|> parseMetaVal)
 
 parseExpr :: Parser LispVal
 parseExpr =
+  try parseChar
+    <|> try parseString
+    <|> try parseNumber
+    <|> try (parseList parseExpr)
+    <|> try (parseVector parseExpr)
+    <|> try (parseQuote parseExpr)
+    <|> try (parseQuasiquote parseExpr)
+    <|> try (parseUnquote parseExpr)
+    <|> try parseAtom
+
+parseExprOrMeta :: Parser LispVal
+parseExprOrMeta =
   parseMeta
     <|> try parseChar
     <|> try parseString
     <|> try parseNumber
-    <|> try parseList
-    <|> try parseVector
-    <|> try parseQuote
-    <|> try parseQuasiquote
-    <|> try parseUnquote
+    <|> try (parseList parseExprOrMeta)
+    <|> try (parseVector parseExprOrMeta)
+    <|> try (parseQuote parseExprOrMeta)
+    <|> try (parseQuasiquote parseExprOrMeta)
+    <|> try (parseUnquote parseExprOrMeta)
     <|> try parseAtom
 
-readExpr :: Text -> ThrowsError LispVal
-readExpr input = case parseOnly (skipMany space >> parseExpr) input of
+readOrThrow :: Parser a -> Text -> ThrowsError a
+readOrThrow parser input = case parseOnly parser input of
   Left  err -> throwError $ Parser err
   Right val -> return val
+
+readExpr :: Text -> ThrowsError LispVal
+readExpr = readOrThrow parseExpr
+
+readExprList :: Text -> ThrowsError [LispVal]
+readExprList = readOrThrow (sepBy parseExpr skipSpaces)

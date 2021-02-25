@@ -6,14 +6,16 @@ import           Import
 import           Lang.Primitives.Types
 import           Lang.Primitives.String
 import           Lang.Primitives.List
+import           Lang.Primitives.IO
 import           Control.Monad.Except           ( MonadError(..) )
 
 data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
 
 primitiveBindings :: RIO a Env
-primitiveBindings = nullEnv
-  >>= flip bindVars (map makePrimitiveFunc primitives)
-  where makePrimitiveFunc (var, func) = (var, Function (PrimFun func))
+primitiveBindings = nullEnv >>= flip
+  bindVars
+  (map (makeFunc IOFun) ioPrimitives <> map (makeFunc PrimFun) primitives)
+  where makeFunc constr (var, func) = (var, Internal (constr func))
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =
@@ -61,6 +63,18 @@ primitives =
   , ("string-length" , stringLen)
   , ("string-ref"    , stringRef)
   , ("string-append" , stringAppend)
+  ]
+
+ioPrimitives :: [(String, [LispVal] -> IOThrowsError App LispVal)]
+ioPrimitives =
+  [ ("open-input-file"  , makePort ReadMode)
+  , ("open-output-file" , makePort WriteMode)
+  , ("close-input-port" , closePort)
+  , ("close-output-port", closePort)
+  , ("read"             , readProc)
+  , ("write"            , writeProc)
+  , ("read-contents"    , readContents)
+  , ("read-all"         , readAll)
   ]
 
 
