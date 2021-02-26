@@ -13,13 +13,12 @@ import           Lang.Quote                     ( lisp )
 import           Lang.Primitives.IO             ( load )
 
 eval :: Env -> LispVal -> IOThrowsError App LispVal
-eval _   val@(String _)                    = return val
-eval _   val@(Number _)                    = return val
-eval _   val@(Bool   _)                    = return val
-eval _   val@(Char   _)                    = return val
-eval env [lisp| @atom:var |]               = getVar env var
-eval _   [lisp| (quote @val) |]            = return val
-eval _   [lisp| (apply @fun @list:args) |] = apply fun args
+eval _   val@(String _)         = return val
+eval _   val@(Number _)         = return val
+eval _   val@(Bool   _)         = return val
+eval _   val@(Char   _)         = return val
+eval env [lisp| @atom:var |]    = getVar env var
+eval _   [lisp| (quote @val) |] = return val
 eval env [lisp| (load @str:filename) |] =
   load filename >>= fmap last . mapM (eval env)
 eval env [lisp| (set! @atom:var @val) |]   = eval env val >>= setVar env var
@@ -58,12 +57,20 @@ eval env form@(List (Atom "case" : key : clauses))
         then mapM (eval env) exprs <&> last
         else eval env $ List (Atom "case" : key : tail clauses)
     _ -> throwError $ BadSpecialForm "ill-formed case expression: " form
+eval env (List (Atom "apply" : func : args)) = do
+  (fun, argVals) <- evalFunc env func args >>= \case
+    (fun, [List argVals]) -> return (fun, argVals)
+    other                 -> return other
+  apply fun argVals
 eval env (List (func : args)) = do
-  fun     <- eval env func
-  argVals <- mapM (eval env) args
+  (fun, argVals) <- evalFunc env func args
   apply fun argVals
 eval _ badForm =
   throwError $ BadSpecialForm "unrecognized special form" badForm
+
+evalFunc
+  :: Env -> LispVal -> [LispVal] -> IOThrowsError App (LispVal, [LispVal])
+evalFunc env func args = (,) <$> eval env func <*> mapM (eval env) args
 
 apply :: LispVal -> [LispVal] -> IOThrowsError App LispVal
 apply (Internal (IOFun   func)) args = func args

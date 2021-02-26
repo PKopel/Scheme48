@@ -1,5 +1,9 @@
 # Changelog for Scheme48
 
+### 0.0.1.1
+* fix `(apply ...)`
+* add stdlib
+
 ### 0.0.1.0
 * add option `--load FILE`
 * improve repl

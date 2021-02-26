@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ExistentialQuantification #-}
-module Utils.Types.Env where
+module Utils.Types.Lisp where
 
 import           RIO
 import           Utils.Types.Num

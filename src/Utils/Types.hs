@@ -2,9 +2,9 @@
 module Utils.Types
   ( module Utils.Types.App
   , module Utils.Types.Num
-  , module Utils.Types.Env
+  , module Utils.Types.Lisp
   )
 where
 import           Utils.Types.App
 import           Utils.Types.Num
-import           Utils.Types.Env
+import           Utils.Types.Lisp

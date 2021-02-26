@@ -23,7 +23,7 @@ primitives =
   , ("-"             , numMulop (-))
   , ("*"             , numMulop (*))
   , ("/"             , numMulop (/))
-  , ("modulo"        , intBinop mod)
+  , ("mod"           , intBinop mod)
   , ("quotient"      , intBinop quot)
   , ("remainder"     , intBinop rem)
   , ("symbol?"       , unop (return . symbolp))
