@@ -16,9 +16,15 @@ main :: IO ()
 main = do
   (options, ()) <- simpleOptions
     $(simpleVersion Paths_Scheme48.version)
-    "Scheme48 - simple interpreter of Lisp"
+    "Scheme48 - simple Lisp interpreter"
     "start the interpreter"
-    (Options <$> switch (long "verbose" <> short 'v' <> help "Verbose output?"))
+    (   Options
+    <$> switch (long "verbose" <> short 'v' <> help "verbose output")
+    <*> strOption
+          (long "load" <> short 'l' <> metavar "FILE" <> value "" <> help
+            "execute program from FILE"
+          )
+    )
     empty
   lo <- logOptionsHandle stderr (optionsVerbose options)
   pc <- mkDefaultProcessContext

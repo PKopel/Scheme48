@@ -7,8 +7,9 @@ import           Data.Version                   ( Version )
 import           System.Console.Haskeline       ( Settings )
 
 -- | Command line arguments
-newtype Options = Options
-  { optionsVerbose :: Bool
+data Options = Options
+  { optionsVerbose :: Bool,
+    optionsLoad :: !FilePath
   }
 
 data App = App

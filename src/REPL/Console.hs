@@ -1,11 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 module REPL.Console where
 
 import           Import
 import           RIO.Orphans                    ( )
-import Data.Text as Text ( null, strip )
+import           Data.Text                     as Text
+                                                ( null
+                                                , strip
+                                                )
 import           System.Console.Haskeline       ( InputT
                                                 , Settings
                                                 , getInputLine

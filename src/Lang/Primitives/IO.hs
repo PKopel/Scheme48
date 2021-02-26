@@ -3,7 +3,9 @@ module Lang.Primitives.IO where
 
 import           Import                  hiding ( hClose )
 import           System.IO
-import Lang.Parser ( readExpr, readExprList )
+import           Lang.Parser                    ( readExpr
+                                                , readExprList
+                                                )
 import           Control.Monad.Except           ( MonadError(..) )
 
 makePort :: IOMode -> [LispVal] -> IOThrowsError App LispVal

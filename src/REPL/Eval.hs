@@ -10,7 +10,7 @@ import           Data.List                      ( head
                                                 )
 import           Control.Monad.Except           ( MonadError(throwError) )
 import           Lang.Quote                     ( lisp )
-import Lang.Primitives.IO ( load )
+import           Lang.Primitives.IO             ( load )
 
 eval :: Env -> LispVal -> IOThrowsError App LispVal
 eval _   val@(String _)                    = return val
