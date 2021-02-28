@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Utils.Util
+module Utils.Eval
   ( unop
   , intBinop
   , numBoolBinop

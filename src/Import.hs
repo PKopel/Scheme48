@@ -2,10 +2,12 @@
 module Import
   ( module RIO
   , module Utils.Types
-  , module Utils.Util
+  , module Utils.Env
+  , module Utils.Eval
   )
 where
 
 import           RIO
 import           Utils.Types
-import           Utils.Util
+import           Utils.Env
+import           Utils.Eval

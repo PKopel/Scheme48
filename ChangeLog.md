@@ -1,5 +1,8 @@
 # Changelog for Scheme48
 
+### 0.0.1.2
+* move operations on Env from Utils.Types.Lisp to Utils.Env
+
 ### 0.0.1.1
 * fix `(apply ...)`
 * add stdlib

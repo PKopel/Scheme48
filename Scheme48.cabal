@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f135e2a3bf32247bf02aedd190687e9964e03c6fc62358c2f64564cb22d5cc17
+-- hash: 7a5ffaad799d2bca3754cfc930fbdb5881c328723380c9fd0fcb2f55e6da1b00
 
 name:           Scheme48
-version:        0.0.1.1
+version:        0.0.1.2
 description:    Please see the README on Github at <https://github.com/PKopel/Scheme48#readme>
 homepage:       https://github.com/PKopel/Scheme48#readme
 bug-reports:    https://github.com/PKopel/Scheme48/issues
@@ -38,11 +38,12 @@ library
       REPL.Console
       REPL.Eval
       Run
+      Utils.Env
+      Utils.Eval
       Utils.Types
       Utils.Types.App
       Utils.Types.Lisp
       Utils.Types.Num
-      Utils.Util
   other-modules:
       Paths_Scheme48
   hs-source-dirs:
