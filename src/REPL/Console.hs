@@ -32,8 +32,8 @@ runLine env colour = do
   checkLine env $ strip . fromString <$> line
 
 checkLine :: Env -> Maybe Text -> InputT (RIO App) ()
-checkLine _ (Just "quit") = return ()
 checkLine env (Just line)
+  | line == ":q" || line == ":quit" = return ()
   | Text.null line = runLine env Green
   | otherwise = evalString env line >>= \case
     Left  err -> lift (logError (fromString $ show err)) >> runLine env Red

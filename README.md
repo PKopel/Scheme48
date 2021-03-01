@@ -10,6 +10,8 @@ like:
 * Run `stack exec s48` to run repl"
 * With `stack exec s48 -- --verbose` to run repl with more logging.
 
+To exit the repl type `:q` or `:quit`.
+
 ### Dependencies
 * **[RIO](https://hackage.haskell.org/package/rio)**
 * **[attoparsec](https://hackage.haskell.org/package/attoparsec)**
