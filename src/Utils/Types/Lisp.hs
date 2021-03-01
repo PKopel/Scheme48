@@ -8,6 +8,7 @@ import           Utils.Types.Num
 import           Utils.Types.App
 import           Control.Monad.Except
 import           Data.Data
+import           Data.Sequence                  ( fromList )
 
 
 data LispVal = Atom String
@@ -22,6 +23,7 @@ data LispVal = Atom String
              | MetaVal String
              | MetaAtom String
              | MetaList String
+             | MetaVector String
              | MetaString String
              deriving(Eq, Ord, Data)
 
@@ -39,8 +41,12 @@ instance Show LispVal where
   show (MetaVal    str) = "meta " <> str
   show (MetaAtom   str) = "meta atom " <> str
   show (MetaList   str) = "meta list " <> str
+  show (MetaVector str) = "meta list " <> str
   show (MetaString str) = "meta string " <> str
   show (Internal   val) = show val
+
+toVector :: [LispVal] -> LispVal
+toVector = Vector . fromList
 
 data LispError = NumArgs Integer [LispVal]
                | TypeMismatch String LispVal

@@ -3,6 +3,7 @@
 ### 0.0.1.3
 * implement quasiquotation
 * change `quit` to `:q|:quit`
+* add `sqrt`
 
 ### 0.0.1.2
 * move operations on Env from Utils.Types.Lisp to Utils.Env

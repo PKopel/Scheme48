@@ -37,6 +37,8 @@ metaExprExp :: LispVal -> Maybe (Q Exp)
 metaExprExp (MetaVal  v) = Just $ varE (mkName v)
 metaExprExp (MetaAtom v) = Just $ appE (conE (mkName "Atom")) (varE (mkName v))
 metaExprExp (MetaList v) = Just $ appE (conE (mkName "List")) (varE (mkName v))
+metaExprExp (MetaVector v) =
+  Just $ appE (conE (mkName "Vector")) (varE (mkName v))
 metaExprExp (MetaString v) =
   Just $ appE (conE (mkName "String")) (varE (mkName v))
 metaExprExp _ = Nothing
@@ -49,5 +51,6 @@ metaExprPat :: LispVal -> Maybe (Q Pat)
 metaExprPat (MetaVal    v) = Just $ varP (mkName v)
 metaExprPat (MetaAtom   v) = Just $ conP (mkName "Atom") [varP (mkName v)]
 metaExprPat (MetaList   v) = Just $ conP (mkName "List") [varP (mkName v)]
+metaExprPat (MetaVector v) = Just $ conP (mkName "Vector") [varP (mkName v)]
 metaExprPat (MetaString v) = Just $ conP (mkName "String") [varP (mkName v)]
 metaExprPat _              = Nothing

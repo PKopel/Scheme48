@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module Utils.Eval
   ( unop
+  , numUnop
   , intBinop
   , numBoolBinop
   , strBoolBinop
@@ -11,6 +12,7 @@ module Utils.Eval
   , unpackStr
   , unpackChar
   , unpackBool
+  , unpackList
   )
 where
 
@@ -26,6 +28,10 @@ type Binop a b = a -> a -> b
 unop :: (LispVal -> ThrowsError LispVal) -> [LispVal] -> ThrowsError LispVal
 unop op [val] = op val
 unop _  args  = throwError $ NumArgs 1 args
+
+numUnop :: (NumType -> NumType) -> [LispVal] -> ThrowsError LispVal
+numUnop op [val] = unpackNum val <&> Number . op
+numUnop _  args  = throwError $ NumArgs 1 args
 
 binop :: Unpacker a -> Packer b -> Binop a b -> [LispVal] -> ThrowsError LispVal
 binop unpack pack op [l, r] = op <$> unpack l <*> unpack r <&> pack
@@ -77,3 +83,7 @@ unpackChar other    = throwError $ TypeMismatch "char" other
 unpackBool :: Unpacker Bool
 unpackBool (Bool b) = return b
 unpackBool other    = throwError $ TypeMismatch "boolean" other
+
+unpackList :: Unpacker [LispVal]
+unpackList (List l) = return l
+unpackList other    = throwError $ TypeMismatch "list" other

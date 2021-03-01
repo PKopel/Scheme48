@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuasiQuotes #-}
+
 module REPL.Eval where
 
 import           Import
@@ -13,14 +14,17 @@ import           Lang.Quote                     ( lisp )
 import           Lang.Primitives.IO             ( load )
 
 eval :: Env -> LispVal -> IOThrowsError App LispVal
-eval _   val@(String _)                    = return val
-eval _   val@(Number _)                    = return val
-eval _   val@(Bool   _)                    = return val
-eval _   val@(Char   _)                    = return val
-eval env [lisp| @atom:var |]               = getVar env var
-eval env [lisp| (quasiquote @list:vals) |] = evalQuasiquote env (1, 0) vals []
-eval _   [lisp| (quasiquote @val) |]       = return val
-eval _   [lisp| (quote @val) |]            = return val
+eval _   val@(String _)      = return val
+eval _   val@(Number _)      = return val
+eval _   val@(Bool   _)      = return val
+eval _   val@(Char   _)      = return val
+eval env [lisp| @atom:var |] = getVar env var
+eval env [lisp| (quasiquote @list:vals) |] =
+  evalQuasiAcc env List (1, 0) vals []
+eval env [lisp| (quasiquote @vec:vals) |] =
+  evalQuasiAcc env toVector (1, 0) (toList vals) []
+eval _ [lisp| (Quasi @val) |] = return val
+eval _ [lisp| (quote @val) |] = return val
 eval env [lisp| (load @str:filename) |] =
   load filename >>= fmap last . mapM (eval env)
 eval env [lisp| (set! @atom:var @val) |]   = eval env val >>= setVar env var
@@ -72,24 +76,40 @@ eval env (List (func : args)) = do
 eval _ badForm =
   throwError $ BadSpecialForm "unrecognized special form" badForm
 
-evalQuasiquote
-  :: Env -> (Int, Int) -> [LispVal] -> [LispVal] -> IOThrowsError App LispVal
-evalQuasiquote _ _ [] acc = return . List $ reverse acc
-evalQuasiquote env (qLevel, uLevel) ([lisp| (unquote @val) |] : vals) acc
-  | qLevel == uLevel + 1 = do
-    res <- eval env val
-    evalQuasiquote env (qLevel, uLevel) vals (res : acc)
-evalQuasiquote env (qLevel, uLevel) ([lisp| (unquote @list:val) |] : vals) acc
+evalQuasiAcc
+  :: Env
+  -> ([LispVal] -> LispVal)
+  -> (Int, Int)
+  -> [LispVal]
+  -> [LispVal]
+  -> IOThrowsError App LispVal
+evalQuasiAcc _ constr _ [] acc = return . constr $ reverse acc
+evalQuasiAcc env constr lvls@(qLevel, uLevel) ([lisp| (@atom:key @val) |] : vals) acc
+  | qLevel == uLevel + 1 && key `elem` ["unquote", "unquote-splicing"]
   = do
-    res <- evalQuasiquote env (qLevel, uLevel + 1) val []
-    evalQuasiquote env (qLevel, uLevel) vals ([lisp| (unquote @res) |] : acc)
-evalQuasiquote env (qLevel, uLevel) ([lisp| (quasiquote @list:val) |] : vals) acc
+    let cat = case key of
+          "unquote"          -> Right . (: acc)
+          "unquote-splicing" -> fmap ((<> acc) . reverse) . unpackList
+          _                  -> undefined
+    eval env val >>= liftThrows . cat >>= evalQuasiAcc env constr lvls vals
+  | key `elem` ["unquote", "unquote-splicing", "quasiquote"]
   = do
-    res <- evalQuasiquote env (qLevel + 1, uLevel) val []
-    evalQuasiquote env (qLevel, uLevel) vals ([lisp| (quasiquote @res) |] : acc)
-evalQuasiquote env lvls (val : vals) acc = do
-  evalQuasiquote env lvls vals (val : acc)
-
+    (constr', val', lvls') <- case [lisp| (@atom:key @val) |] of
+      [lisp| (unquote @list:value) |] ->
+        return (List, value, (qLevel, uLevel + 1))
+      [lisp| (unquote-splicing @list:value) |] ->
+        return (List, value, (qLevel, uLevel + 1))
+      [lisp| (quasiquote @list:value) |] ->
+        return (List, value, (qLevel + 1, uLevel))
+      [lisp| (unquote @vec:value) |] ->
+        return (toVector, toList value, (qLevel, uLevel + 1))
+      [lisp| (quasiquote @vec:value) |] ->
+        return (toVector, toList value, (qLevel + 1, uLevel))
+      other -> throwError $ BadSpecialForm "unrecognized special form" other
+    res <- evalQuasiAcc env constr' lvls' val' []
+    evalQuasiAcc env constr lvls vals ([lisp| (@atom:key @res) |] : acc)
+evalQuasiAcc env constr lvls (val : vals) acc =
+  evalQuasiAcc env constr lvls vals (val : acc)
 
 apply :: LispVal -> [LispVal] -> IOThrowsError App LispVal
 apply (Internal (IOFun   func)) args = func args
