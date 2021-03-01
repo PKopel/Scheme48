@@ -80,8 +80,9 @@ instance Floating NumType where
   asinh = realOp asinh
   acosh = realOp acosh
   atanh = realOp atanh
+  sqrt  = realOp sqrt
 
-realOp :: (forall  a . Floating a => a -> a) -> NumType -> NumType
+realOp :: (Double -> Double) -> NumType -> NumType
 realOp op (Real a) = Real $ op a
 realOp op a        = realOp op (toReal a)
 

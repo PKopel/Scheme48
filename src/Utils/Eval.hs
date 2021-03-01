@@ -12,6 +12,7 @@ module Utils.Eval
   , unpackStr
   , unpackChar
   , unpackBool
+  , unpackList
   )
 where
 
@@ -85,4 +86,4 @@ unpackBool other    = throwError $ TypeMismatch "boolean" other
 
 unpackList :: Unpacker [LispVal]
 unpackList (List l) = return l
-unpackList other = throwError $ TypeMismatch "list" other
+unpackList other    = throwError $ TypeMismatch "list" other

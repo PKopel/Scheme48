@@ -14,13 +14,14 @@ import           Lang.Quote                     ( lisp )
 import           Lang.Primitives.IO             ( load )
 
 eval :: Env -> LispVal -> IOThrowsError App LispVal
-eval _   val@(String _)               = return val
-eval _   val@(Number _)               = return val
-eval _   val@(Bool   _)               = return val
-eval _   val@(Char   _)               = return val
-eval env [lisp| @atom:var |]          = getVar env var
-eval env [lisp| (Quasi @list:vals) |] = evalQuasiAcc env List (1, 0) vals []
-eval env [lisp| (Quasi @vec:vals) |] =
+eval _   val@(String _)      = return val
+eval _   val@(Number _)      = return val
+eval _   val@(Bool   _)      = return val
+eval _   val@(Char   _)      = return val
+eval env [lisp| @atom:var |] = getVar env var
+eval env [lisp| (quasiquote @list:vals) |] =
+  evalQuasiAcc env List (1, 0) vals []
+eval env [lisp| (quasiquote @vec:vals) |] =
   evalQuasiAcc env toVector (1, 0) (toList vals) []
 eval _ [lisp| (Quasi @val) |] = return val
 eval _ [lisp| (quote @val) |] = return val
@@ -83,50 +84,31 @@ evalQuasiAcc
   -> [LispVal]
   -> IOThrowsError App LispVal
 evalQuasiAcc _ constr _ [] acc = return . constr $ reverse acc
-evalQuasiAcc env constr lvls@(qLevel, uLevel) ([lisp| (unquote @val) |] : vals) acc
-  | qLevel == uLevel + 1 = do
-    res <- eval env val
-    evalQuasiAcc env constr (qLevel, uLevel) vals (res : acc)
-evalQuasiAcc env constr (qLevel, uLevel) ([lisp| (unquote-splicing @val) |] : vals) acc
-  | qLevel == uLevel + 1
+evalQuasiAcc env constr lvls@(qLevel, uLevel) ([lisp| (@atom:key @val) |] : vals) acc
+  | qLevel == uLevel + 1 && key `elem` ["unquote", "unquote-splicing"]
   = do
-    res <- eval env val >>= \case
-      List list -> return list
-      other -> throwError $ BadSpecialForm ",@ does not evaluate to list" other
-    evalQuasiAcc env constr (qLevel, uLevel) vals (reverse res <> acc)
-evalQuasiAcc env constr (qLevel, uLevel) ([lisp| (unquote @list:val) |] : vals) acc
+    let cat = case key of
+          "unquote"          -> Right . (: acc)
+          "unquote-splicing" -> fmap ((<> acc) . reverse) . unpackList
+          _                  -> undefined
+    eval env val >>= liftThrows . cat >>= evalQuasiAcc env constr lvls vals
+  | key `elem` ["unquote", "unquote-splicing", "quasiquote"]
   = do
-    res <- evalQuasiAcc env List (qLevel, uLevel + 1) val []
-    evalQuasiAcc env
-                 constr
-                 (qLevel, uLevel)
-                 vals
-                 ([lisp| (unquote @res) |] : acc)
-evalQuasiAcc env constr (qLevel, uLevel) ([lisp| (quasiquote @list:val) |] : vals) acc
-  = do
-    res <- evalQuasiAcc env List (qLevel + 1, uLevel) val []
-    evalQuasiAcc env
-                 constr
-                 (qLevel, uLevel)
-                 vals
-                 ([lisp| (quasiquote @res) |] : acc)
-evalQuasiAcc env constr (qLevel, uLevel) ([lisp| (unquote @vec:val) |] : vals) acc
-  = do
-    res <- evalQuasiAcc env toVector (qLevel, uLevel + 1) (toList val) []
-    evalQuasiAcc env
-                 constr
-                 (qLevel, uLevel)
-                 vals
-                 ([lisp| (unquote @res) |] : acc)
-evalQuasiAcc env constr (qLevel, uLevel) ([lisp| (quasiquote @vec:val) |] : vals) acc
-  = do
-    res <- evalQuasiAcc env toVector (qLevel + 1, uLevel) (toList val) []
-    evalQuasiAcc env
-                 constr
-                 (qLevel, uLevel)
-                 vals
-                 ([lisp| (quasiquote @res) |] : acc)
-evalQuasiAcc env constr lvls (val : vals) acc = do
+    (constr', val', lvls') <- case [lisp| (@atom:key @val) |] of
+      [lisp| (unquote @list:value) |] ->
+        return (List, value, (qLevel, uLevel + 1))
+      [lisp| (unquote-splicing @list:value) |] ->
+        return (List, value, (qLevel, uLevel + 1))
+      [lisp| (quasiquote @list:value) |] ->
+        return (List, value, (qLevel + 1, uLevel))
+      [lisp| (unquote @vec:value) |] ->
+        return (toVector, toList value, (qLevel, uLevel + 1))
+      [lisp| (quasiquote @vec:value) |] ->
+        return (toVector, toList value, (qLevel + 1, uLevel))
+      other -> throwError $ BadSpecialForm "unrecognized special form" other
+    res <- evalQuasiAcc env constr' lvls' val' []
+    evalQuasiAcc env constr lvls vals ([lisp| (@atom:key @res) |] : acc)
+evalQuasiAcc env constr lvls (val : vals) acc =
   evalQuasiAcc env constr lvls vals (val : acc)
 
 apply :: LispVal -> [LispVal] -> IOThrowsError App LispVal
