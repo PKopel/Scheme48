@@ -142,13 +142,21 @@ parseMetaAtom = "atom:" *> many1 letter <&> MetaAtom
 parseMetaList :: Parser LispVal
 parseMetaList = "list:" *> many1 letter <&> MetaList
 
+parseMetaVector :: Parser LispVal
+parseMetaVector = "vec:" *> many1 letter <&> MetaVector
+
 parseMetaString :: Parser LispVal
 parseMetaString = "str:" *> many1 letter <&> MetaString
 
 parseMeta :: Parser LispVal
 parseMeta =
   char '@'
-    *> (parseMetaAtom <|> parseMetaList <|> parseMetaString <|> parseMetaVal)
+    *> (   parseMetaAtom
+       <|> parseMetaList
+       <|> parseMetaVector
+       <|> parseMetaString
+       <|> parseMetaVal
+       )
 
 parseExpr :: Parser LispVal
 parseExpr =
@@ -159,6 +167,7 @@ parseExpr =
     <|> try (parseVector parseExpr)
     <|> try (parseQuote parseExpr)
     <|> try (parseQuasiquote parseExpr)
+    <|> try (parseUnquoteSplicing parseExpr)
     <|> try (parseUnquote parseExpr)
     <|> try parseAtom
 
@@ -172,6 +181,7 @@ parseExprOrMeta =
     <|> try (parseVector parseExprOrMeta)
     <|> try (parseQuote parseExprOrMeta)
     <|> try (parseQuasiquote parseExprOrMeta)
+    <|> try (parseUnquoteSplicing parseExprOrMeta)
     <|> try (parseUnquote parseExprOrMeta)
     <|> try parseAtom
 

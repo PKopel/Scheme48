@@ -66,6 +66,25 @@ instance Fractional NumType where
   a           / b           = numTypeOp (/) a b
   fromRational = Rational
 
+instance Floating NumType where
+  pi    = Real pi
+  exp   = realOp exp
+  log   = realOp log
+  sin   = realOp sin
+  cos   = realOp cos
+  asin  = realOp asin
+  acos  = realOp acos
+  atan  = realOp atan
+  sinh  = realOp sinh
+  cosh  = realOp cosh
+  asinh = realOp asinh
+  acosh = realOp acosh
+  atanh = realOp atanh
+
+realOp :: (forall  a . Floating a => a -> a) -> NumType -> NumType
+realOp op (Real a) = Real $ op a
+realOp op a        = realOp op (toReal a)
+
 numTypeOp
   :: (forall  a . (Num a, Fractional a) => a -> a -> a)
   -> NumType
