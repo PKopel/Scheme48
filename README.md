@@ -18,7 +18,7 @@ To exit the repl type `:q` or `:quit`.
 * `-v | --verbose`: run repl with verbose output
 * `-l | --load FILE`: on start execute contents of FILE  
 
-### Dependencies
+## Dependencies
 * **[RIO](https://hackage.haskell.org/package/rio)**
 * **[attoparsec](https://hackage.haskell.org/package/attoparsec)**
 * **[Haskeline](https://hackage.haskell.org/package/haskeline)**
@@ -27,6 +27,6 @@ To exit the repl type `:q` or `:quit`.
 * **[QuickCheck](https://hackage.haskell.org/package/QuickCheck)**
 * **[SYB](https://hackage.haskell.org/package/syb)**
 
-### Author
+## Author
 
 * **[Paweł Kopel](https://github.com/PKopel)**
