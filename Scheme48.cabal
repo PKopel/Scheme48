@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 17caba02221fb7b300ab0e7b73dd0ceed4047179f825db2f5d15294e4b98f57e
+-- hash: a6ce83ae5dd16b8286e75089867e165d608357e7438f3f6f002ee8905570b5b0
 
 name:           Scheme48
 version:        0.0.1.3
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Import
+      Lang.Lexer
       Lang.Parser
       Lang.Primitives
       Lang.Primitives.IO
@@ -35,6 +36,7 @@ library
       Lang.Primitives.String
       Lang.Primitives.Types
       Lang.Quote
+      Lang.Tokens
       REPL.Console
       REPL.Eval
       Run
