@@ -31,7 +31,7 @@ import           Lang.Tokens
 @decimal_suffix    = \. [0-9][0-9_]*
 @double            = [0-9][0-9_]* @decimal_suffix?
 @string            = \" ( @escape | $printable # \")* \"
-@atom              = [A-Za-z][A-Za-z0-9'_]*
+@atom              = ([A-Za-z\!\#\$\%\&\|\*\+\-\/\:\<\=\>\?\@\^\_\~] )($printable)*
 @char              = \' ( @escape | [^\\'\n\t\r] ) \'
 tokens :-
     $white+			;
