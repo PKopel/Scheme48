@@ -2,7 +2,11 @@
 module Lang.Primitives.IO where
 
 import           Import                  hiding ( hClose )
-import           System.IO
+import           System.IO                      ( readFile
+                                                , hClose
+                                                , hGetLine
+                                                , hPrint
+                                                )
 import           Lang.Parser                    ( readExpr
                                                 , readExprList
                                                 )
